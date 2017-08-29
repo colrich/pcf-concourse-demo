@@ -64,16 +64,6 @@ resources:
       space: {{cf-space-gcp}}
       skip_cert_check: true
 
-  - name: cf-prod-azure
-    type: cf
-    source:
-      api: {{cf-api-azure}}
-      username: {{cf-username-azure}}
-      password: {{cf-password-azure}}
-      organization: {{cf-org-azure}}
-      space: {{cf-space-azure}}
-      skip_cert_check: true
-
 jobs:
   - name: unit-test
     public: true
@@ -177,24 +167,6 @@ jobs:
         params:
           manifest: prepare-gcp/gcp/manifest.yml 
 
-  - name: prepare-azure
-    serial: true
-    plan:
-      - get: candidate-release
-        passed: [ ship-it ]
-      - get: pcfdemo
-        passed: [ ship-it ]
-        trigger: true
-      - get: version
-        passed: [ship-it]
-      - task: prepare-azure
-        file: pcfdemo/ci/tasks/prepare-azure.yml
-        params:
-          CF_MANIFEST_HOST_AZURE: {{cf-manifest-host-prod-azure}} 
-      - put: cf-prod-azure
-        params:
-          manifest: prepare-azure/azure/manifest.yml 
-
   - name: major
     serial_groups: [ version ]
     plan:
@@ -211,7 +183,7 @@ jobs:
     serial_groups: [ version ]
     plan:
       - get: version
-        passed: [ prepare-aws, prepare-gcp, prepare-azure ]
+        passed: [ prepare-aws, prepare-gcp ]
         trigger: true
       - put: version
         params: { bump: patch, pre: rc }
